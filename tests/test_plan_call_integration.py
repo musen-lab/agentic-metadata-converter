@@ -104,14 +104,27 @@ class TestPlanCallIntegration:
 
         # Make multiple API calls
         for i in range(3):
-            result = plan_call(mock_state.copy())
+            result = plan_call(mock_state)
             results.append(result)
             assert isinstance(result, Command)
             assert result.goto in ["analysis", END]
 
         # Print results for manual verification
         for i, result in enumerate(results):
-            print(f"Call {i + 1}: {result.goto}")
+            message_content = result.update["messages"][0]["content"]
+            if i == 0:
+              assert "**Legacy field**: title" in message_content
+              assert "**Legacy value**: Legacy Document Title" in message_content
+            elif i == 1:
+              assert "**Legacy field**: author" in message_content
+              assert "**Legacy value**: John Smith" in message_content
+            elif i == 2:
+              assert "**Legacy field**: date" in message_content
+              assert "**Legacy value**: 2024-01-15" in message_content
+
+            print(f"(Call {i + 1}) Process goes to node: {result.goto}")
+            print(f"(Call {i + 1}) Print update message:\n{json.dumps(result.update, indent=2, default=str)}")
+
 
         # All should be Command objects
         assert all(isinstance(r, Command) for r in results)

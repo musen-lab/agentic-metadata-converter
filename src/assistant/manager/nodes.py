@@ -50,6 +50,8 @@ def plan_call(state: AppState) -> Command[Literal["analysis", END]]:
                 }
             ]
         }
+        # Update the last check field in the state
+        state["last_checked_field"] = legacy_field
 
     return Command(goto=goto, update=update)
 
