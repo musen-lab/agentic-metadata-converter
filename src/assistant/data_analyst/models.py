@@ -2,32 +2,32 @@ from typing import List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 
 
-class TargetField(BaseModel):
+class SchemaField(BaseModel):
     """Represents a field in the target schema."""
     
     name: str = Field(description="Field name")
     description: str = Field(description="Field description")
-    type: str = Field(description="Field type (text, categorical, number)")
+    type: Literal["text", "categorical", "number"] = Field(description="Field type (text, categorical, number)")
     required: bool = Field(description="Whether field is required")
     regex: Optional[str] = Field(default=None, description="Validation regex pattern")
     default_value: Optional[Union[str, int, float, bool]] = Field(default=None, description="Default value")
-    permissible_values: Optional[List[Union[str, int, float]]] = Field(default=None, description="List of allowed values")
+    permissible_values: Optional[List[str]] = Field(default=None, description="List of allowed values")
 
 
 class TargetSchema(BaseModel):
     """Represents the complete target schema."""
     
-    fields: List[TargetField] = Field(description="List of target schema fields")
+    fields: List[SchemaField] = Field(description="List of target schema fields")
 
 
-class RecommendedMapping(BaseModel):
+class MappingDigest(BaseModel):
     """Represents a recommended mapping."""
     
     target_field: str = Field(description="Target field name")
     target_value: Union[str, int, float, bool, None] = Field(description="Final transformed value")
-    confidence_score: float = Field(description="Confidence score (0-1)")
     transformation_required: bool = Field(description="Whether transformation is needed")
     transformation_description: str = Field(description="Description of transformation if needed")
+    confidence_score: float = Field(description="Confidence score (0-1)")
 
 
 class PastMappingRecord(BaseModel):
@@ -35,7 +35,7 @@ class PastMappingRecord(BaseModel):
     
     legacy_field: str = Field(description="Legacy field name")
     legacy_value: Union[str, int, float, bool, None] = Field(description="Legacy field value")
-    recommended_mappings: List[RecommendedMapping] = Field(description="Past recommended mappings")
+    recommended_mappings: List[MappingDigest] = Field(description="Past recommended mappings")
     overall_confidence: float = Field(description="Past overall confidence score")
 
 
@@ -67,16 +67,16 @@ class AnalysisResult(BaseModel):
         default_factory=list,
         description="All viable mappings with confidence >= 0.6, ordered by confidence"
     )
-    recommended_mappings: List[RecommendedMapping] = Field(
+    recommended_mappings: List[MappingDigest] = Field(
         default_factory=list,
         description="Best mapping(s) selected from mapping_results"
     )
     overall_confidence: float = Field(description="Overall confidence in the mapping approach (0-1)")
-    mapping_strategy: Literal["direct", "one-to-many", "composite"] = Field(
+    mapping_strategy: Literal["one-to-one", "one-to-many"] = Field(
         description="Strategy used for mapping"
     )
     reasoning: str = Field(description="Explanation of why this is the best mapping approach")
-    alternative_mappings: List[MappingResult] = Field(
+    alternative_mappings: List[MappingDigest] = Field(
         default_factory=list,
         description="Other viable options from mapping_results not in recommended_mappings"
     )
