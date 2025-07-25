@@ -172,6 +172,7 @@ Provide your analysis in this structured format:
         "target_value": "final_transformed_value",
         "transformation_required": true/false,
         "transformation_description": "description of transformation if needed"
+        "confidence_score": 0.0-1.0,
       }
       // Additional mappings for one-to-many scenarios
     ],
