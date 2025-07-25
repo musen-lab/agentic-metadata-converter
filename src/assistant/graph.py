@@ -1,12 +1,11 @@
-from typing import Dict, Any, Optional
+from typing import List
 from langgraph.graph import MessagesState
-from .data_analyst.models import TargetSchema, PastAnalysis
+from .data_analyst.models import TargetSchema, AnalysisResult, PastMappingRecord
 
 
 class AppState(MessagesState):
-    # TODO: Implement graph state
     legacy_metadata: dict
-    target_schema: TargetSchema
-    past_analysis: PastAnalysis
     last_checked_field: str
-    analysis_result: Optional[Dict[str, Any]] = None  # Stores analysis results for implement_call
+    target_schema: TargetSchema
+    analysis_result: AnalysisResult
+    past_analysis: List[PastMappingRecord]
