@@ -1,0 +1,92 @@
+from typing import List, Optional, Union, Literal
+from pydantic import BaseModel, Field
+
+
+class TargetField(BaseModel):
+    """Represents a field in the target schema."""
+    
+    name: str = Field(description="Field name")
+    description: str = Field(description="Field description")
+    type: str = Field(description="Field type (text, categorical, number)")
+    required: bool = Field(description="Whether field is required")
+    regex: Optional[str] = Field(default=None, description="Validation regex pattern")
+    default_value: Optional[Union[str, int, float, bool]] = Field(default=None, description="Default value")
+    permissible_values: Optional[List[Union[str, int, float]]] = Field(default=None, description="List of allowed values")
+
+
+class TargetSchema(BaseModel):
+    """Represents the complete target schema."""
+    
+    fields: List[TargetField] = Field(description="List of target schema fields")
+
+
+class RecommendedMapping(BaseModel):
+    """Represents a recommended mapping."""
+    
+    target_field: str = Field(description="Target field name")
+    target_value: Union[str, int, float, bool, None] = Field(description="Final transformed value")
+    confidence_score: float = Field(description="Confidence score (0-1)")
+    transformation_required: bool = Field(description="Whether transformation is needed")
+    transformation_description: str = Field(description="Description of transformation if needed")
+
+
+class PastMappingRecord(BaseModel):
+    """Represents a past mapping analysis record for learning."""
+    
+    legacy_field: str = Field(description="Legacy field name")
+    legacy_value: Union[str, int, float, bool, None] = Field(description="Legacy field value")
+    recommended_mappings: List[RecommendedMapping] = Field(description="Past recommended mappings")
+    overall_confidence: float = Field(description="Past overall confidence score")
+
+
+class PastAnalysis(BaseModel):
+    """Represents collection of past analysis records."""
+    
+    records: List[PastMappingRecord] = Field(default_factory=list, description="List of past mapping records")
+
+
+class MappingResult(BaseModel):
+    """Represents a single mapping analysis result."""
+    
+    target_field: str = Field(description="Target field name")
+    target_value: Union[str, int, float, bool, None] = Field(description="Transformed or original value")
+    transformation_required: bool = Field(description="Whether transformation is needed")
+    transformation_description: str = Field(description="Description of transformation if needed")
+    field_similarity_score: float = Field(description="Field similarity score (0-1)")
+    value_compatibility_score: float = Field(description="Value compatibility score (0-1)")
+    confidence_score: float = Field(description="Overall confidence score (0-1)")
+    warnings: List[str] = Field(default_factory=list, description="List of warnings if any")
+
+
+class AnalysisResult(BaseModel):
+    """Complete analysis result from the analyst."""
+    
+    legacy_field: str = Field(description="The legacy field name analyzed")
+    legacy_value: Union[str, int, float, bool, None] = Field(description="The legacy field value analyzed")
+    mapping_results: List[MappingResult] = Field(
+        default_factory=list,
+        description="All viable mappings with confidence >= 0.6, ordered by confidence"
+    )
+    recommended_mappings: List[RecommendedMapping] = Field(
+        default_factory=list,
+        description="Best mapping(s) selected from mapping_results"
+    )
+    overall_confidence: float = Field(description="Overall confidence in the mapping approach (0-1)")
+    mapping_strategy: Literal["direct", "one-to-many", "composite"] = Field(
+        description="Strategy used for mapping"
+    )
+    reasoning: str = Field(description="Explanation of why this is the best mapping approach")
+    alternative_mappings: List[MappingResult] = Field(
+        default_factory=list,
+        description="Other viable options from mapping_results not in recommended_mappings"
+    )
+    no_mapping_reason: Optional[str] = Field(
+        default=None,
+        description="Explanation if no viable mapping found"
+    )
+
+
+class AnalysisOutput(BaseModel):
+    """Top-level wrapper for analysis output."""
+    
+    analysis: AnalysisResult = Field(description="The complete analysis result")
