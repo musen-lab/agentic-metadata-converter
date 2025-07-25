@@ -1,4 +1,4 @@
-from typing import Literal, Any
+from typing import Literal, Union
 from pydantic import BaseModel, Field
 
 
@@ -11,6 +11,6 @@ class ActionPlan(BaseModel):
     legacy_field: str = Field(
         description="Field name from the legacy metadata that requires processing."
     )
-    legacy_value: Any = Field(
+    legacy_value: Union[str, int, float, bool, None] = Field(
         description="Actual value associated with the legacy field."
     )
