@@ -1,5 +1,4 @@
 import json
-import re
 from typing import Literal
 from langchain.chat_models import init_chat_model
 from langgraph.types import Command
@@ -29,16 +28,13 @@ def analysis_call(state: AppState) -> Command[Literal["implement", END]]:
     last_message = messages[-1]
     message_content = last_message.get("content", "")
     
-    # Extract legacy field and value from the formatted message
-    # Expected format: "Analyze this legacy metadata field and value:\n**Legacy field**: field_name\n**Legacy value**: field_value"
-    legacy_field, legacy_value = _extract_legacy_field_value(message_content)
+    # Get the current legacy field from the state
+    legacy_field = state.get("last_checked_field")
     
     if not legacy_field:
-        print(f"Could not extract legacy field from message: {message_content}")
+        print("Found no legacy field needs to be analyzed")
         return Command(goto=END, update={})
-    
-    print(f"Analyzing legacy field: {legacy_field} = {legacy_value}")
-    
+        
     # Get target schema and past analysis from state
     target_schema = state.get("target_schema")
     past_analysis = state.get("past_analysis")
@@ -59,8 +55,8 @@ def analysis_call(state: AppState) -> Command[Literal["implement", END]]:
         past_analysis=json.dumps(past_analysis_dict, indent=2)
     )
     
-    # Create user prompt with the legacy field and value
-    user_prompt = f"Analyze this legacy metadata field and value:\n**Legacy field**: {legacy_field}\n**Legacy value**: {legacy_value}"
+    # Pass the message as user prompt
+    user_prompt = message_content
     
     # Get structured output from LLM
     llm = _analysis_llm.with_structured_output(AnalysisOutput)
@@ -100,26 +96,6 @@ def analysis_call(state: AppState) -> Command[Literal["implement", END]]:
                 }
             ]
         })
-
-
-def _extract_legacy_field_value(message_content: str) -> tuple[str, str]:
-    """Extract legacy field and value from formatted message content."""
-    try:
-        # Look for the pattern: **Legacy field**: field_name and **Legacy value**: field_value
-        field_match = re.search(r'\*\*Legacy field\*\*:\s*(.+)', message_content)
-        value_match = re.search(r'\*\*Legacy value\*\*:\s*(.+)', message_content)
-        
-        if field_match and value_match:
-            field = field_match.group(1).strip()
-            value = value_match.group(1).strip()
-            return field, value
-            
-    except Exception as e:
-        print(f"Error extracting legacy field/value: {e}")
-    
-    return "", ""
-
-
 
 
 def implement_call(state: AppState):
