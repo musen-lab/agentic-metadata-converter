@@ -1,5 +1,6 @@
 import pytest
 import os
+import json
 from langgraph.types import Command
 from langgraph.graph import END
 from src.assistant.manager.nodes import plan_call
@@ -59,10 +60,11 @@ class TestPlanCallIntegration:
 
             message_content = result.update["messages"][0]["content"]
             assert "Analyze this legacy metadata field and value:" in message_content
-            assert "**Legacy field**:" in message_content
-            assert "**Legacy value**:" in message_content
+            assert "**Legacy field**: title" in message_content
+            assert "**Legacy value**: Legacy Document Title" in message_content
 
-        print(f"API returned action: {result.goto}")
+        print(f"Process goes to node: {result.goto}")
+        print(f"Print update message:\n{json.dumps(result.update, indent=2, default=str)}")
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -78,7 +80,18 @@ class TestPlanCallIntegration:
         assert isinstance(result, Command)
         assert result.goto in ["analysis", END]
 
-        print(f"API returned action with last_checked_field: {result.goto}")
+        if result.goto == "analysis":
+            # Should have messages for analysis
+            assert "messages" in result.update
+            assert len(result.update["messages"]) >= 1
+
+            message_content = result.update["messages"][0]["content"]
+            assert "Analyze this legacy metadata field and value:" in message_content
+            assert "**Legacy field**: author" in message_content
+            assert "**Legacy value**: John Smith" in message_content
+
+        print(f"Process goes to node: {result.goto}")
+        print(f"Print update message:\n{json.dumps(result.update, indent=2, default=str)}")
 
     @pytest.mark.integration
     @pytest.mark.skipif(
