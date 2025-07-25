@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph
-from assistant import AppState
-from assistant.manager.nodes import plan_call, execute_call, tool_handler
-from assistant.data_analyst.nodes import analysis_call, implement_call
+from .graph import AppState
+from .manager.nodes import plan_call, execute_call, tool_handler
+from .data_analyst.nodes import analysis_call, implement_call
 
 
 workflow = StateGraph(AppState)

@@ -1,4 +1,4 @@
-from assistant.graph import AppState
+from ..graph import AppState
 
 
 def analysis_call(state: AppState):
