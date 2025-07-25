@@ -1,19 +1,9 @@
-import sys
-import os
 import pytest
 from unittest.mock import Mock, patch
 from langgraph.types import Command
 from langgraph.graph import END
-
-# Load environment variables from .env file
-from dotenv import load_dotenv
-
-load_dotenv()
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-
-from assistant.manager.nodes import plan_call
-from assistant.manager.models import ActionPlan
+from src.assistant.manager.nodes import plan_call
+from src.assistant.manager.models import ActionPlan
 
 
 class TestPlanCall:
@@ -32,7 +22,7 @@ class TestPlanCall:
         }
         return state
 
-    @patch("assistant.manager.nodes._plan_llm")
+    @patch("src.assistant.manager.nodes._plan_llm")
     def test_plan_call_analyze_action(self, mock_llm, mock_state):
         """Test plan_call when LLM returns analyze action."""
         # Mock the LLM response
@@ -71,7 +61,7 @@ class TestPlanCall:
         assert llm_call_args[0]["role"] == "system"
         assert llm_call_args[1]["role"] == "user"
 
-    @patch("assistant.manager.nodes._plan_llm")
+    @patch("src.assistant.manager.nodes._plan_llm")
     def test_plan_call_transform_action(self, mock_llm, mock_state):
         """Test plan_call when LLM returns transform action."""
         # Mock the LLM response
@@ -97,7 +87,7 @@ class TestPlanCall:
         mock_llm.with_structured_output.assert_called_once_with(ActionPlan)
         mock_structured_llm.invoke.assert_called_once()
 
-    @patch("assistant.manager.nodes._plan_llm")
+    @patch("src.assistant.manager.nodes._plan_llm")
     def test_plan_call_with_last_checked_field(self, mock_llm):
         """Test plan_call with a last_checked_field set."""
         state = {
@@ -126,7 +116,7 @@ class TestPlanCall:
         system_prompt = llm_call_args[0]["content"]
         assert "title" in system_prompt
 
-    @patch("assistant.manager.nodes._plan_llm")
+    @patch("src.assistant.manager.nodes._plan_llm")
     def test_plan_call_prompts_formatting(self, mock_llm, mock_state):
         """Test that prompts are formatted correctly with state data."""
         # Mock the LLM response
@@ -158,7 +148,7 @@ class TestPlanCall:
         assert "Test Document" in user_prompt
 
     @patch("builtins.print")
-    @patch("assistant.manager.nodes._plan_llm")
+    @patch("src.assistant.manager.nodes._plan_llm")
     def test_plan_call_prints_analyze_message(self, mock_llm, mock_print, mock_state):
         """Test that plan_call prints the expected message for analyze action."""
         # Mock the LLM response
