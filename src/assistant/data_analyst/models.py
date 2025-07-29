@@ -25,7 +25,6 @@ class MappingDigest(BaseModel):
     
     target_field: str = Field(description="Target field name")
     target_value: Union[str, int, float, bool, None] = Field(description="Final transformed value")
-    transformation_required: bool = Field(description="Whether transformation is needed")
     transformation_description: str = Field(description="Description of transformation if needed")
     confidence_score: float = Field(description="Confidence score (0-1)")
 
@@ -50,7 +49,6 @@ class MappingResult(BaseModel):
     
     target_field: str = Field(description="Target field name")
     target_value: Union[str, int, float, bool, None] = Field(description="Transformed or original value")
-    transformation_required: bool = Field(description="Whether transformation is needed")
     transformation_description: str = Field(description="Description of transformation if needed")
     field_similarity_score: float = Field(description="Field similarity score (0-1)")
     value_compatibility_score: float = Field(description="Value compatibility score (0-1)")
