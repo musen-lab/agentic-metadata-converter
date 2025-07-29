@@ -128,7 +128,7 @@ class TestAnalysisCallIntegration:
                         confidence_score=0.95,
                     )
                 ],
-                overall_confidence=0.95,
+                reasoning="The legacy field 'sample_id' closely aligns with the target field 'parent_sample_id' based on semantic meaning and description. The legacy value 'HBM386.ZGKG.235' matches the required pattern for 'parent_sample_id', resulting in a high confidence score.",
             ),
             PastMappingRecord(
                 legacy_field="sequencing_type",
@@ -140,7 +140,7 @@ class TestAnalysisCallIntegration:
                         confidence_score=0.75,
                     )
                 ],
-                overall_confidence=0.75,
+                reasoning="The legacy field 'sequencing_type' closely aligns with the target field 'dataset_type' based on semantic meaning. The legacy value 'RNA sequencing' is normalized to the permissible value 'RNAseq' in the target schema, resulting in a good confidence score.",
             ),
         ]
         return PastAnalysis(records=records)
@@ -176,7 +176,7 @@ class TestAnalysisCallIntegration:
     def test_analysis_call_direct_sample_id_mapping(self, target_schema, past_analysis):
         """Test analysis with direct sample ID mapping."""
         state = self.create_state(
-            "sample_identifier", "HBM386.ZGKG.235", target_schema, past_analysis
+            "sample_id", "HBM386.ZGKG.235", target_schema, past_analysis
         )
 
         result = analysis_call(state)
@@ -189,7 +189,7 @@ class TestAnalysisCallIntegration:
 
         # Check analysis result
         analysis_result = result.update["analysis_result"]
-        assert analysis_result["legacy_field"] == "sample_identifier"
+        assert analysis_result["legacy_field"] == "sample_id"
         assert analysis_result["legacy_value"] == "HBM386.ZGKG.235"
         assert analysis_result["overall_confidence"] > 0.0
 

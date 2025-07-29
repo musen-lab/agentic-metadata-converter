@@ -34,7 +34,7 @@ class PastMappingRecord(BaseModel):
     legacy_field: str = Field(description="Legacy field name")
     legacy_value: Union[str, int, float, bool, None] = Field(description="Legacy field value")
     recommended_mappings: List[MappingDigest] = Field(description="Past recommended mappings")
-    overall_confidence: float = Field(description="Past overall confidence score")
+    reasoning: str = Field(description="Explanation of why this is the best mapping approach")
 
 
 class PastAnalysis(BaseModel):

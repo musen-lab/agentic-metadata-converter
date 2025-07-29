@@ -58,7 +58,7 @@ class TestAnalysisCall:
                         confidence_score=0.95,
                     )
                 ],
-                overall_confidence=0.95,
+                reasoning="The legacy field 'sample_id' closely aligns with the target field 'parent_sample_id' based on semantic meaning and description. The legacy value 'HBM386.ZGKG.235' matches the required pattern for 'parent_sample_id', resulting in a high confidence score.",
             )
         ]
         return PastAnalysis(records=records)
