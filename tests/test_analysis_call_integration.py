@@ -125,7 +125,6 @@ class TestAnalysisCallIntegration:
                     MappingDigest(
                         target_field="parent_sample_id",
                         target_value="HBM123.ABCD.456",
-                        transformation_description="Direct mapping",
                         confidence_score=0.95,
                     )
                 ],
@@ -138,7 +137,6 @@ class TestAnalysisCallIntegration:
                     MappingDigest(
                         target_field="dataset_type",
                         target_value="RNAseq",
-                        transformation_description="Normalize to standard dataset type",
                         confidence_score=0.75,
                     )
                 ],

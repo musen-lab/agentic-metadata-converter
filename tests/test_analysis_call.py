@@ -55,7 +55,6 @@ class TestAnalysisCall:
                     MappingDigest(
                         target_field="parent_sample_id",
                         target_value="HBM123.ABCD.456",
-                        transformation_description="Direct mapping",
                         confidence_score=0.95,
                     )
                 ],
@@ -234,7 +233,6 @@ class TestAnalysisCall:
                     MappingDigest(
                         target_field="parent_sample_id",
                         target_value="HBM386.ZGKG.235",
-                        transformation_description="Direct mapping",
                         confidence_score=0.95,
                     )
                 ],

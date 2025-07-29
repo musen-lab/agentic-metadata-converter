@@ -35,14 +35,22 @@ Follow this approach to determine the best mapping:
 
 ## Step 1: Field Name Analysis
 1. **Exact Match**: Check if the legacy field name exactly matches any target field name
+   - field_mapping_notes: "Exact field name match"
 2. **Case-Insensitive Match**: Check for matches ignoring case differences
+   - field_mapping_notes: "Field name match (case-insensitive)"
 3. **Partial Match**: Look for target fields that contain the legacy field name or vice versa
+   - field_mapping_notes: "Field name contains legacy field pattern '[pattern]'"
 4. **Description-Based Semantic Matching**: Use target field descriptions to identify semantic relationships:
    - Legacy "sample_id" → target "parent_sample_id" (description mentions "identifier of the sample")
+   - field_mapping_notes: "Field description indicates this handles sample identifiers, matching legacy field purpose"
    - Legacy "protocol_url" → target "preparation_protocol_doi" (description mentions "protocols.io page")
+   - field_mapping_notes: "Field description mentions protocol references, matching legacy field content"
    - Legacy "instrument_make" → target "acquisition_instrument_vendor" (description mentions "manufacturer")
+   - field_mapping_notes: "Field description indicates instrument manufacturer information, matching legacy field data"
 5. **Contextual Similarity**: Consider domain knowledge and field purpose from descriptions
+   - field_mapping_notes: "Based on field description and domain context, this field handles [specific purpose]"
 6. **Domain-Specific Mappings**: Apply specialized knowledge for scientific metadata fields
+   - field_mapping_notes: "Domain knowledge indicates this field stores [data type], matching legacy field purpose"
 
 ## Step 2: Value Compatibility Analysis
 For each potential target field match from Step 1:
@@ -50,35 +58,54 @@ For each potential target field match from Step 1:
 1. **Type Validation**: 
    - Check if legacy value type is compatible with target field type
    - text -> text/categorical (direct compatibility)
+     - value_mapping_notes: "Direct mapping - value type already compatible"
    - number -> number (direct compatibility)
+     - value_mapping_notes: "Direct mapping - numeric value already in correct format"
    - text -> number (if value can be parsed as number)
+     - value_mapping_notes: "Converted text '[value]' to numeric format"
    - number -> text (always possible with string conversion)
+     - value_mapping_notes: "Converted numeric value to text format"
 
 2. **Format Validation**:
    - If target field has regex pattern, test if legacy value matches
+     - value_mapping_notes: "Value already matches required pattern [pattern]"
    - If no match, determine if value can be transformed to match
+     - value_mapping_notes: "Reformatted '[old_value]' to match pattern [pattern] -> '[new_value]'"
 
 3. **Permissible Values Check**:
    - If target field has permissible_values, check if legacy value is in the list
+     - value_mapping_notes: "Value '[value]' found in permissible values - direct mapping"
    - If not, look for closest semantic match in permissible values
+     - value_mapping_notes: "Normalized '[old_value]' to closest permissible value '[new_value]'"
    - Consider case variations and abbreviations
+     - value_mapping_notes: "Adjusted case from '[old_value]' to '[new_value]' to match permissible values"
 
 4. **Default Value Consideration**:
    - Note if target field has a default value that could be used
+     - value_mapping_notes: "Using target field default value '[default_value]' - legacy value not applicable"
 
 ## Step 3: One-to-Many Mapping Analysis
 Analyze if the legacy field/value should be decomposed across multiple target fields:
 
 1. **Composite Value Detection**: Check if legacy value contains multiple semantic components
    - Examples: "John Doe, PhD" -> separate name and degree fields
+     - value_mapping_notes: "Extracted name portion 'John Doe' from composite value"
+     - value_mapping_notes: "Extracted degree 'PhD' from composite value"
    - "2024-01-15 10:30" -> separate date and time fields
+     - value_mapping_notes: "Extracted date '2024-01-15' from datetime value"
+     - value_mapping_notes: "Extracted time '10:30' from datetime value"
    - "Sample_Type_A_Batch_001" -> separate type and batch fields
+     - value_mapping_notes: "Extracted sample type 'Type_A' from compound identifier"
+     - value_mapping_notes: "Extracted batch number '001' from compound identifier"
 
 2. **Unit Decomposition**: For values with units, separate value and unit
    - Example: "10 mg" -> amount_value: 10, amount_unit: "mg"
+     - value_mapping_notes: "Extracted numeric value '10' from unit expression"
+     - value_mapping_notes: "Extracted unit 'mg' from unit expression"
 
 3. **List Decomposition**: For comma-separated or delimited values
    - Example: "red,blue,green" -> multiple target fields or array field
+     - value_mapping_notes: "Split delimited list and mapped item '[item]' to target field"
 
 ## Step 4: Mapping Quality Assessment
 Rate each potential mapping using these precise formulas:
