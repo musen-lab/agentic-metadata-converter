@@ -190,6 +190,7 @@ Generate the appropriate RFC 6902 JSON Patch operations to transform the legacy 
         # Store patches in state and return success message
         # Get existing patches from state
         existing_patches = state.get("patches", [])
+        new_patches = [patch.model_dump(by_alias=True, exclude_none=True) for patch in result.patches]
         return Command(
             goto="plan",
             update={
@@ -199,7 +200,7 @@ Generate the appropriate RFC 6902 JSON Patch operations to transform the legacy 
                         "content": f"Implementation completed for {legacy_field}. Generated {num_patches} JSON Patch operations to transform the legacy metadata.",
                     }
                 ],
-                "patches": existing_patches + result.patches,
+                "patches": existing_patches + new_patches,
             },
         )
 
