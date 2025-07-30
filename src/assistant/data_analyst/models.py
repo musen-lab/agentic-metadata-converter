@@ -128,7 +128,7 @@ class JsonPatch(BaseModel):
         description="The operation to be performed"
     )
     path: str = Field(description="JSON Pointer string indicating the target location")
-    value: Optional[Union[str, int, float, bool, list, dict, None]] = Field(
+    value: Optional[Union[str, int, float, bool, None]] = Field(
         default=None,
         description="The value to be used for the operation (not used for remove operations)",
     )
