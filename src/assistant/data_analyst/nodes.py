@@ -133,10 +133,6 @@ def implement_call(state: AppState) -> Command[Literal["plan", END]]:
         print("No messages found in state for implementation")
         return Command(goto=END, update={})
 
-    # Get the last message which should contain the transformation instructions
-    last_message = messages[-1]
-    message_content = last_message.get("content", "")
-
     # Get the analysis result from state
     analysis_result = state.get("analysis_result")
     if not analysis_result:
