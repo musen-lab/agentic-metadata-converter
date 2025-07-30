@@ -2,10 +2,6 @@ import pytest
 import os
 import json
 from langgraph.types import Command
-
-# Set dummy API key to avoid errors during module import (will be overridden by real key for integration tests)
-os.environ.setdefault("OPENAI_API_KEY", "test-key-for-unit-tests")
-
 from src.assistant.data_analyst.nodes import analysis_call
 from src.assistant.data_analyst.models import (
     TargetSchema,
