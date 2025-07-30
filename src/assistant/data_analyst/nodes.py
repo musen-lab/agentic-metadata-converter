@@ -4,12 +4,15 @@ from langchain.chat_models import init_chat_model
 from langgraph.types import Command
 from langgraph.graph import END
 from ..graph import AppState
-from .models import AnalysisOutput
-from .prompts import ANALYST_SYSTEM_PROMPT
+from .models import AnalysisOutput, ImplementationOutput
+from .prompts import ANALYST_SYSTEM_PROMPT, IMPLEMENTOR_SYSTEM_PROMPT
 
 
 # Initialize the LLM for analysis
 _analysis_llm = init_chat_model("openai:gpt-4o", temperature=0.0)
+
+# Initialize the LLM for implementation
+_implementation_llm = init_chat_model("openai:gpt-4o", temperature=0.0)
 
 
 def analysis_call(state: AppState) -> Command[Literal["implement", END]]:
@@ -98,10 +101,86 @@ def analysis_call(state: AppState) -> Command[Literal["implement", END]]:
         })
 
 
-def implement_call(state: AppState):
+def implement_call(state: AppState) -> Command[Literal["plan", END]]:
     """
-    Translate the transformation instruction as a JSON-Patch operation, according to the
+    Translate the field mapping analysis results to JSON-Patch operations, according to the
     RFC 6902 specification.
     """
-    # TODO: Implement this
-    return
+    # Extract messages from state (sent by analysis_call)
+    messages = state.get("messages", [])
+    if not messages:
+        print("No messages found in state for implementation")
+        return Command(goto=END, update={})
+
+    # Get the last message which should contain the transformation instructions
+    last_message = messages[-1]
+    message_content = last_message.get("content", "")
+
+    # Get the analysis result from state
+    analysis_result = state.get("analysis_result")
+    if not analysis_result:
+        print("No analysis result found in state for implementation")
+        return Command(goto=END, update={
+              "messages": [{"role": "assistant", "content": "Implementation failed: No analysis result available"}]
+        })
+
+    # Format the user prompt with the analysis result details
+    user_prompt = f"""
+Based on the following analysis result, generate JSON Patch operations:
+
+**Analysis Result:**
+- Legacy field: {analysis_result.get("legacy_field", None)}
+- Legacy value: {analysis_result.get("legacy_value", None)}
+- Target field mappings: {json.dumps(analysis_result.get("recommended_mappings", []), indent=2)}
+- Mapping strategy: {analysis_result.get("mapping_strategy", "one-to-one")}
+- Overall confidence: {analysis_result.get("overall_confidence", 0.0)}
+- Reasoning: {analysis_result.get("reasoning", "No reasoning provided")}
+
+**Original Request:** {message_content}
+
+Generate the appropriate RFC 6902 JSON Patch operations to transform the legacy metadata according to this analysis.
+"""
+
+    # Get structured output from LLM
+    llm = _implementation_llm.with_structured_output(ImplementationOutput)
+
+    try:
+        result = llm.invoke(
+            [
+                {"role": "system", "content": IMPLEMENTOR_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ]
+        )
+
+        legacy_field = analysis_result.get("legacy_field", None)
+        num_patches = len(result.patches)
+
+        print(f"Implementation completed for {legacy_field}")
+        print(f"Generated {num_patches} JSON Patch operations")
+
+        # Store patches in state and return success message
+        # Get existing patches from state
+        existing_patches = state.get("patches", [])
+        return Command(
+            goto="plan",
+            update={
+                "messages": [
+                    {
+                        "role": "assistant",
+                        "content": f"Implementation completed for {legacy_field}. Generated {num_patches} JSON Patch operations to transform the legacy metadata.",
+                    }
+                ],
+                "patches": existing_patches + result.patches,
+            },
+        )
+
+    except Exception as e:
+        print(f"Error during implementation: {str(e)}")
+        return Command(
+            goto=END,
+            update={
+                "messages": [
+                    {"role": "assistant", "content": f"Implementation failed: {str(e)}"}
+                ]
+            },
+        )

@@ -1,6 +1,6 @@
 from typing import List
 from langgraph.graph import MessagesState
-from .data_analyst.models import TargetSchema, AnalysisResult, PastMappingRecord
+from .data_analyst.models import TargetSchema, AnalysisResult, PastMappingRecord, JsonPatch
 
 
 class AppState(MessagesState):
@@ -9,3 +9,4 @@ class AppState(MessagesState):
     target_schema: TargetSchema
     analysis_result: AnalysisResult
     past_analysis: List[PastMappingRecord]
+    patches: List[JsonPatch]

@@ -88,3 +88,29 @@ class AnalysisOutput(BaseModel):
     """Top-level wrapper for analysis output."""
     
     analysis: AnalysisResult = Field(description="The complete analysis result")
+
+
+class JsonPatch(BaseModel):
+    """Represents a single RFC 6902 JSON Patch operation."""
+
+    op: Literal["add", "remove", "replace", "move", "copy", "test"] = Field(
+        description="The operation to be performed"
+    )
+    path: str = Field(description="JSON Pointer string indicating the target location")
+    value: Optional[Union[str, int, float, bool, list, dict, None]] = Field(
+        default=None,
+        description="The value to be used for the operation (not used for remove operations)",
+    )
+    from_: Optional[str] = Field(
+        default=None,
+        alias="from",
+        description="The source location for move and copy operations",
+    )
+
+
+class ImplementationOutput(BaseModel):
+    """Top-level wrapper for implementation output containing JSON patches."""
+
+    patches: List[JsonPatch] = Field(
+        description="List of RFC 6902 JSON Patch operations to apply"
+    )
