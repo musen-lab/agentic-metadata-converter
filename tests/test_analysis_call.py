@@ -86,18 +86,18 @@ class TestAnalysisCall:
         assert isinstance(result, Command)
         assert result.goto == END
         assert result.update == {}
-        
+
         # Test empty messages list
         state_no_messages = {"messages": []}
         result = analysis_call(state_no_messages)
         assert isinstance(result, Command)
         assert result.goto == END
         assert result.update == {}
-        
+
         # Test missing last_checked_field
         state_no_field = {
             "messages": [{"role": "user", "content": "test"}],
-            "last_checked_field": None
+            "last_checked_field": None,
         }
         result = analysis_call(state_no_field)
         assert isinstance(result, Command)
@@ -107,13 +107,13 @@ class TestAnalysisCall:
     def test_analysis_call_handles_missing_target_schema(self, base_state):
         """Test that missing target schema is handled properly."""
         base_state["target_schema"] = None
-        
+
         result = analysis_call(base_state)
-        
+
         assert isinstance(result, Command)
         assert result.goto == END
         assert "messages" in result.update
-        
+
         error_message = result.update["messages"][0]
         assert error_message["role"] == "assistant"
         assert "Analysis failed for sample_identifier" in error_message["content"]
@@ -124,7 +124,7 @@ class TestAnalysisCall:
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             # Create a minimal valid response to avoid errors
             mock_result = AnalysisResult(
                 legacy_field="sample_identifier",
@@ -133,33 +133,35 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.8,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             analysis_call(base_state)
-            
+
             # Verify the function extracted the correct data
             mock_structured_llm.invoke.assert_called_once()
             call_args = mock_structured_llm.invoke.call_args[0][0]
-            
+
             # Should have system and user messages
             assert len(call_args) == 2
             assert call_args[0]["role"] == "system"
             assert call_args[1]["role"] == "user"
-            
+
             # User message should contain the original message content
             user_content = call_args[1]["content"]
             expected_content = base_state["messages"][0]["content"]
             assert user_content == expected_content
 
-    def test_analysis_call_formats_system_prompt_with_schema_and_past_analysis(self, base_state):
+    def test_analysis_call_formats_system_prompt_with_schema_and_past_analysis(
+        self, base_state
+    ):
         """Test that system prompt is properly formatted with target schema and past analysis."""
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             # Mock response
             mock_result = AnalysisResult(
                 legacy_field="sample_identifier",
@@ -168,21 +170,21 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             analysis_call(base_state)
-            
+
             # Get the system prompt that was passed to LLM
             call_args = mock_structured_llm.invoke.call_args[0][0]
             system_prompt = call_args[0]["content"]
-            
+
             # Verify target schema data is in the prompt
             assert "parent_sample_id" in system_prompt
             assert "dataset_type" in system_prompt
-            
+
             # Verify past analysis data is in the prompt
             assert "sample_id" in system_prompt  # from past analysis
             assert "HBM123.ABCD.456" in system_prompt  # from past analysis
@@ -192,7 +194,7 @@ class TestAnalysisCall:
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             # Mock response
             mock_result = AnalysisResult(
                 legacy_field="test",
@@ -201,29 +203,28 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             analysis_call(base_state)
-            
+
             # Get the system prompt
             call_args = mock_structured_llm.invoke.call_args[0][0]
             system_prompt = call_args[0]["content"]
-                        
+
             # Verify that the prompt contains valid JSON (would fail if models weren't converted)
             # The prompt should contain JSON-formatted schema and past analysis
             assert isinstance(system_prompt, str)
             assert len(system_prompt) > 100  # Should have substantial content
-
 
     def test_analysis_call_successful_flow_returns_correct_command(self, base_state):
         """Test that successful analysis returns correct Command structure."""
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             # Create a realistic analysis result
             mock_result = AnalysisResult(
                 legacy_field="sample_identifier",
@@ -238,27 +239,27 @@ class TestAnalysisCall:
                 ],
                 overall_confidence=0.95,
                 mapping_strategy="one-to-one",
-                reasoning="Direct mapping found"
+                reasoning="Direct mapping found",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             result = analysis_call(base_state)
-            
+
             # Test command structure
             assert isinstance(result, Command)
             assert result.goto == "implement"
             assert isinstance(result.update, dict)
             assert "messages" in result.update
             assert "analysis_result" in result.update
-            
+
             # Test message structure
             message = result.update["messages"][0]
             assert message["role"] == "assistant"
             assert "Analysis completed for sample_identifier" in message["content"]
             assert "1 recommended mappings" in message["content"]
             assert "overall confidence 0.95" in message["content"]
-            
+
             # Test that analysis result is properly serialized
             analysis_result = result.update["analysis_result"]
             assert isinstance(analysis_result, dict)  # Should be serialized to dict
@@ -270,17 +271,17 @@ class TestAnalysisCall:
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             # Simulate LLM throwing an exception
             mock_structured_llm.invoke.side_effect = Exception("API connection failed")
-            
+
             result = analysis_call(base_state)
-            
+
             # Should return END command with error message
             assert isinstance(result, Command)
             assert result.goto == END
             assert "messages" in result.update
-            
+
             error_message = result.update["messages"][0]
             assert error_message["role"] == "assistant"
             assert "Analysis failed for sample_identifier" in error_message["content"]
@@ -291,7 +292,7 @@ class TestAnalysisCall:
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             # Mock response
             mock_result = AnalysisResult(
                 legacy_field="test",
@@ -300,13 +301,13 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             analysis_call(base_state)
-            
+
             # Verify LLM was configured for structured output with correct model
             mock_llm.with_structured_output.assert_called_once_with(AnalysisOutput)
             mock_structured_llm.invoke.assert_called_once()
@@ -318,17 +319,20 @@ class TestAnalysisCall:
             "messages": [
                 {"role": "user", "content": "First message"},
                 {"role": "assistant", "content": "Assistant response"},
-                {"role": "user", "content": "**Legacy field**: test_field\n**Legacy value**: test_value"}
+                {
+                    "role": "user",
+                    "content": "**Legacy field**: test_field\n**Legacy value**: test_value",
+                },
             ],
             "last_checked_field": "test_field",
             "target_schema": TargetSchema(fields=[]),
-            "past_analysis": PastAnalysis(records=[])
+            "past_analysis": PastAnalysis(records=[]),
         }
-        
+
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             mock_result = AnalysisResult(
                 legacy_field="test_field",
                 legacy_value="test_value",
@@ -336,28 +340,31 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             analysis_call(state_multiple_messages)
-            
+
             # Verify the last message content was used
             call_args = mock_structured_llm.invoke.call_args[0][0]
             user_prompt = call_args[1]["content"]
-            assert user_prompt == "**Legacy field**: test_field\n**Legacy value**: test_value"
+            assert (
+                user_prompt
+                == "**Legacy field**: test_field\n**Legacy value**: test_value"
+            )
             assert "First message" not in user_prompt
 
     def test_analysis_call_field_consistency_check(self, base_state):
         """Test that the function maintains consistency between last_checked_field and analysis results."""
         # Change the last_checked_field to something different
         base_state["last_checked_field"] = "different_field"
-        
+
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             mock_result = AnalysisResult(
                 legacy_field="different_field",  # Should match last_checked_field
                 legacy_value="test_value",
@@ -365,13 +372,13 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             result = analysis_call(base_state)
-            
+
             # The success message should reference the correct field
             message = result.update["messages"][0]
             assert "Analysis completed for different_field" in message["content"]
@@ -381,7 +388,7 @@ class TestAnalysisCall:
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             mock_result = AnalysisResult(
                 legacy_field="sample_identifier",
                 legacy_value="test",
@@ -389,17 +396,17 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.75,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             result = analysis_call(base_state)
-            
+
             # Verify the analysis result contains the model dump
             analysis_result = result.update["analysis_result"]
             assert analysis_result == mock_result.model_dump()
-            
+
             # Verify correct routing
             assert result.goto == "implement"
             assert isinstance(result.update["analysis_result"], dict)
@@ -407,11 +414,11 @@ class TestAnalysisCall:
     def test_analysis_call_handles_edge_case_empty_content(self, base_state):
         """Test handling of messages with empty content."""
         base_state["messages"][0]["content"] = ""
-        
+
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             mock_result = AnalysisResult(
                 legacy_field="sample_identifier",
                 legacy_value="",
@@ -419,17 +426,17 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.0,
                 mapping_strategy="one-to-one",
-                reasoning="Empty content"
+                reasoning="Empty content",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             result = analysis_call(base_state)
-            
+
             # Should still process successfully
             assert isinstance(result, Command)
             assert result.goto == "implement"
-            
+
             # Verify empty content was passed to LLM
             call_args = mock_structured_llm.invoke.call_args[0][0]
             user_content = call_args[1]["content"]
@@ -442,14 +449,14 @@ class TestAnalysisCall:
         target_schema_mock.model_dump.return_value = {"test": "schema"}
         past_analysis_mock = Mock()
         past_analysis_mock.model_dump.return_value = {"test": "analysis"}
-        
+
         base_state["target_schema"] = target_schema_mock
         base_state["past_analysis"] = past_analysis_mock
-        
+
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             mock_result = AnalysisResult(
                 legacy_field="test",
                 legacy_value="test",
@@ -457,17 +464,17 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             result = analysis_call(base_state)
-            
+
             # Verify model_dump was called on both objects
             target_schema_mock.model_dump.assert_called_once()
             past_analysis_mock.model_dump.assert_called_once()
-            
+
             # Verify the result analysis was also serialized via model_dump
             analysis_result = result.update["analysis_result"]
             assert isinstance(analysis_result, dict)
@@ -479,13 +486,13 @@ class TestAnalysisCall:
             "messages": [{"role": "user", "content": "test content"}],
             "last_checked_field": "test_field",
             "target_schema": {"fields": []},  # Regular dict, no model_dump
-            "past_analysis": {"records": []}   # Regular dict, no model_dump
+            "past_analysis": {"records": []},  # Regular dict, no model_dump
         }
-        
+
         with patch("src.assistant.data_analyst.nodes._analysis_llm") as mock_llm:
             mock_structured_llm = Mock()
             mock_llm.with_structured_output.return_value = mock_structured_llm
-            
+
             mock_result = AnalysisResult(
                 legacy_field="test_field",
                 legacy_value="test",
@@ -493,17 +500,17 @@ class TestAnalysisCall:
                 recommended_mappings=[],
                 overall_confidence=0.5,
                 mapping_strategy="one-to-one",
-                reasoning="Test"
+                reasoning="Test",
             )
             mock_output = AnalysisOutput(analysis=mock_result)
             mock_structured_llm.invoke.return_value = mock_output
-            
+
             result = analysis_call(state_with_dicts)
-            
+
             # Should still work with regular dicts
             assert isinstance(result, Command)
             assert result.goto == "implement"
-            
+
             # Verify the system prompt was still formatted
             call_args = mock_structured_llm.invoke.call_args[0][0]
             system_prompt = call_args[0]["content"]

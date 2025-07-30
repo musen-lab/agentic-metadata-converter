@@ -64,7 +64,9 @@ class TestPlanCallIntegration:
             assert "**Legacy value**: Legacy Document Title" in message_content
 
         print(f"Process goes to node: {result.goto}")
-        print(f"Print update message:\n{json.dumps(result.update, indent=2, default=str)}")
+        print(
+            f"Print update message:\n{json.dumps(result.update, indent=2, default=str)}"
+        )
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -91,7 +93,9 @@ class TestPlanCallIntegration:
             assert "**Legacy value**: John Smith" in message_content
 
         print(f"Process goes to node: {result.goto}")
-        print(f"Print update message:\n{json.dumps(result.update, indent=2, default=str)}")
+        print(
+            f"Print update message:\n{json.dumps(result.update, indent=2, default=str)}"
+        )
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -113,18 +117,19 @@ class TestPlanCallIntegration:
         for i, result in enumerate(results):
             message_content = result.update["messages"][0]["content"]
             if i == 0:
-              assert "**Legacy field**: title" in message_content
-              assert "**Legacy value**: Legacy Document Title" in message_content
+                assert "**Legacy field**: title" in message_content
+                assert "**Legacy value**: Legacy Document Title" in message_content
             elif i == 1:
-              assert "**Legacy field**: author" in message_content
-              assert "**Legacy value**: John Smith" in message_content
+                assert "**Legacy field**: author" in message_content
+                assert "**Legacy value**: John Smith" in message_content
             elif i == 2:
-              assert "**Legacy field**: date" in message_content
-              assert "**Legacy value**: 2024-01-15" in message_content
+                assert "**Legacy field**: date" in message_content
+                assert "**Legacy value**: 2024-01-15" in message_content
 
             print(f"(Call {i + 1}) Process goes to node: {result.goto}")
-            print(f"(Call {i + 1}) Print update message:\n{json.dumps(result.update, indent=2, default=str)}")
-
+            print(
+                f"(Call {i + 1}) Print update message:\n{json.dumps(result.update, indent=2, default=str)}"
+            )
 
         # All should be Command objects
         assert all(isinstance(r, Command) for r in results)

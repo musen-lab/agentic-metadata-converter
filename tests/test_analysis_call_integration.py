@@ -160,13 +160,13 @@ class TestAnalysisCallIntegration:
         }
 
     def print_analysis_result(self, result):
-      """Print the analysis result"""
-      analysis_result = result.update["analysis_result"]
-      print("Analysis results:")
-      print(f"  Overall confidence: {analysis_result['overall_confidence']}")
-      print(f"  Recommended mappings: {len(analysis_result['recommended_mappings'])}")
-      print(f"  Strategy: {analysis_result['mapping_strategy']}")
-      print(f"  Result: {json.dumps(result.update, indent=2, default=str)}")
+        """Print the analysis result"""
+        analysis_result = result.update["analysis_result"]
+        print("Analysis results:")
+        print(f"  Overall confidence: {analysis_result['overall_confidence']}")
+        print(f"  Recommended mappings: {len(analysis_result['recommended_mappings'])}")
+        print(f"  Strategy: {analysis_result['mapping_strategy']}")
+        print(f"  Result: {json.dumps(result.update, indent=2, default=str)}")
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -204,7 +204,6 @@ class TestAnalysisCallIntegration:
 
         self.print_analysis_result(result)
 
-
     @pytest.mark.integration
     @pytest.mark.skipif(
         not os.getenv("OPENAI_API_KEY"),
@@ -236,7 +235,6 @@ class TestAnalysisCallIntegration:
             assert len(duration_fields) > 0
 
         self.print_analysis_result(result)
-
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -271,7 +269,6 @@ class TestAnalysisCallIntegration:
 
         self.print_analysis_result(result)
 
-
     @pytest.mark.integration
     @pytest.mark.skipif(
         not os.getenv("OPENAI_API_KEY"),
@@ -298,7 +295,6 @@ class TestAnalysisCallIntegration:
 
         # Should have low confidence and potentially no recommended mappings
         self.print_analysis_result(result)
-
 
     @pytest.mark.integration
     @pytest.mark.skipif(
@@ -336,7 +332,6 @@ class TestAnalysisCallIntegration:
 
         self.print_analysis_result(result)
 
-
     @pytest.mark.integration
     @pytest.mark.skipif(
         not os.getenv("OPENAI_API_KEY"),
@@ -368,7 +363,6 @@ class TestAnalysisCallIntegration:
             assert any(field in recommended_fields for field in numeric_fields)
 
         self.print_analysis_result(result)
-
 
     @pytest.mark.integration
     @pytest.mark.skipif(
