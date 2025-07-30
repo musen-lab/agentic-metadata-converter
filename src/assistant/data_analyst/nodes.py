@@ -152,20 +152,24 @@ def implement_call(state: AppState) -> Command[Literal["plan", END]]:
                 ]
             },
         )
+    # Extract necessary analysis result information
+    legacy_field = analysis_result.get("legacy_field", None)
+    legacy_value = analysis_result.get("legacy_value", None)
+    recommended_mappings = analysis_result.get("recommended_mappings", [])
+    mapping_strategy = analysis_result.get("mapping_strategy", "one-to-one")
+    overall_confidence = analysis_result.get("overall_confidence", 0.0)
+    reasoning = analysis_result.get("reasoning", "No reasoning provided")
 
     # Format the user prompt with the analysis result details
     user_prompt = f"""
 Based on the following analysis result, generate JSON Patch operations:
 
 **Analysis Result:**
-- Legacy field: {analysis_result.get("legacy_field", None)}
-- Legacy value: {analysis_result.get("legacy_value", None)}
-- Target field mappings: {json.dumps(analysis_result.get("recommended_mappings", []), indent=2)}
-- Mapping strategy: {analysis_result.get("mapping_strategy", "one-to-one")}
-- Overall confidence: {analysis_result.get("overall_confidence", 0.0)}
-- Reasoning: {analysis_result.get("reasoning", "No reasoning provided")}
-
-**Original Request:** {message_content}
+- Legacy: {json.dumps({legacy_field: legacy_value}) if legacy_field is not None else '{}'}
+- Target: {json.dumps({mapping["target_field"]: mapping["target_value"] for mapping in recommended_mappings})}
+- Mapping strategy: {mapping_strategy}
+- Overall confidence: {overall_confidence}
+- Reasoning: {reasoning}
 
 Generate the appropriate RFC 6902 JSON Patch operations to transform the legacy metadata according to this analysis.
 """

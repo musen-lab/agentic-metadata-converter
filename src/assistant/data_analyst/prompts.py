@@ -260,7 +260,7 @@ Operations:
 When target_field is None or target_value is None, indicating no valid mapping exists:
 ```
 Legacy: {"deprecated_field": "some_value"}
-No target mapping found
+Target: {}
 
 Operations:
 1. Remove the field: {"op": "remove", "path": "/deprecated_field"}
