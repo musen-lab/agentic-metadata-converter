@@ -229,66 +229,66 @@ When legacy field name differs from target field name but value stays the same:
 ```
 Legacy: {"sample_id": "HBM123.ABCD.001"}
 Target: {"parent_sample_id": "HBM123.ABCD.001"}
-
+```
 Operations:
 1. Add the new field: {"op": "add", "path": "/parent_sample_id", "value": "HBM123.ABCD.001"}
 2. Remove the old field: {"op": "remove", "path": "/sample_id"}
-```
+
 
 ## Scenario 2: Value Transformation Only  
 When field name stays the same but value needs transformation:
 ```
 Legacy: {"dataset_type": "rna_seq"}
 Target: {"dataset_type": "RNAseq"}
-
+```
 Operations:
 1. Replace the value: {"op": "replace", "path": "/dataset_type", "value": "RNAseq"}
-```
+
 
 ## Scenario 3: Both Field Name and Value Change
 When both field name and value need transformation:
 ```
 Legacy: {"instrument_make": "Illumina Inc."}
 Target: {"acquisition_instrument_vendor": "Illumina"}
-
+```
 Operations:
 1. Add the new field with new value: {"op": "add", "path": "/acquisition_instrument_vendor", "value": "Illumina"}
 2. Remove the old field: {"op": "remove", "path": "/instrument_make"}
-```
+
 
 ## Scenario 4: Remove Field (No Target Mapping)
 When target_field is None or target_value is None, indicating no valid mapping exists:
 ```
 Legacy: {"deprecated_field": "some_value"}
 Target: {}
-
+```
 Operations:
 1. Remove the field: {"op": "remove", "path": "/deprecated_field"}
-```
+
 
 ## Scenario 5: One-to-Many Mapping
 When one legacy field maps to multiple target fields:
 ```
 Legacy: {"full_name": "John Doe, PhD"}
 Target: {"first_name": "John", "last_name": "Doe", "degree": "PhD"}
-
+```
 Operations:
 1. Add first target field: {"op": "add", "path": "/first_name", "value": "John"}
 2. Add second target field: {"op": "add", "path": "/last_name", "value": "Doe"}  
 3. Add third target field: {"op": "add", "path": "/degree", "value": "PhD"}
 4. Remove original field: {"op": "remove", "path": "/full_name"}
-```
+
 
 ## Scenario 6: Nested Field Operations
 When working with nested objects:
 ```
 Legacy: {"metadata": {"sample_type": "tissue"}}
 Target: {"sample": {"type": "tissue_sample"}}
-
+```
 Operations:
 1. Add new nested structure: {"op": "add", "path": "/sample", "value": {"type": "tissue_sample"}}
 2. Remove old nested structure: {"op": "remove", "path": "/metadata"}
-```
+
 
 # JSON Pointer Path Rules
 - Root level fields: "/field_name"
